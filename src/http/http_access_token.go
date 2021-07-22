@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/deepak-v4/bookstore_oauth-api/src/domain/access_token"
+	access_token_service "github.com/deepak-v4/bookstore_oauth-api/src/services"
 	"github.com/deepak-v4/bookstore_oauth-api/src/utils/rest_errors"
 	"github.com/gin-gonic/gin"
 )
@@ -16,10 +17,10 @@ type AccessTokenHandler interface {
 }
 
 type accessTokenHandler struct {
-	service access_token.Service
+	service access_token_service.Service
 }
 
-func NewAccessTokenHandler(service access_token.Service) AccessTokenHandler {
+func NewAccessTokenHandler(service access_token_service.Service) AccessTokenHandler {
 	return &accessTokenHandler{
 		service: service,
 	}
@@ -39,18 +40,19 @@ func (h *accessTokenHandler) GetById(c *gin.Context) {
 
 func (h *accessTokenHandler) CreateId(c *gin.Context) {
 
-	var at access_token.AccessToken
+	var at access_token.AccessTokenRequest
 	if err := c.ShouldBindJSON(&at); err != nil {
 		restErr := rest_errors.NewBadRequest("invalid json body")
 		c.JSON(restErr.Status, restErr)
 		return
 	}
 
-	if err := h.service.CreateId(at); err != nil {
+	accessToken, err := h.service.CreateId(at)
+	if err != nil {
 		c.JSON(err.Status, err)
 		return
 
 	}
 
-	c.JSON(http.StatusOK, at)
+	c.JSON(http.StatusCreated, accessToken)
 }
